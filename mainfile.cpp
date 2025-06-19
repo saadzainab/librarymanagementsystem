@@ -3,12 +3,11 @@
 #include<cstring>
 #include<string>
 #include<fstream>
+#include <sstream>
+#include <ctime>
+#include <cstdio>
 using namespace std;
 
-#pragma once
-#include <iostream>
-#include <string>
-using namespace std;
 
 class Book {
 private:
@@ -170,23 +169,85 @@ private:
     string dueDate;
     string returnDate;
     float fineAmount;
-public:
-    void createTransaction(int bookId, int userId);
-    void returnBook(string returnDate);
-    void calculateFine(); // logic based on dueDate and returnDate
-    void displayTransaction() const {
-        cout << "Transaction ID: " << transactionId
-             << ", Book ID: " << bookId
-             << ", User ID: " << userId
-             << ", Issue Date: " << issueDate
-             << ", Due Date: " << dueDate
-             << ", Return Date: " << returnDate
-             << ", Fine Amount: $" << fineAmount << endl;
-    }
-    
-};
- 
 
+public:
+ Transaction() : transactionId(0), bookId(0), userId(0), issueDate(""), dueDate(""), returnDate(""), fineAmount(0.0f) {}
+
+    // Parameterized constructor
+    Transaction(int tid, int bid, int uid, const string& issue, const string& due)
+        : transactionId(tid), bookId(bid), userId(uid), issueDate(issue), dueDate(due), returnDate(""), fineAmount(0.0f) {}
+
+    // Create a new transaction
+    void createTransaction(int tId, int bId, int uId, const string& issue, const string& due) {
+        transactionId = tId;
+        bookId = bId;
+        userId = uId;
+        issueDate = issue;
+        dueDate = due;
+        returnDate = "";
+        fineAmount = 0.0f;
+    }
+
+    // Return a book and set return date
+    void returnBook(const string& rDate) {
+        returnDate = rDate;
+        calculateFine(); // Automatically calculate fine on return
+    }
+
+    // Fine calculation based on dueDate and returnDate
+    void calculateFine() {
+    const float finePerDay = 5.0f;
+
+    // Extract year, month, day from dueDate
+    int dueY, dueM, dueD;
+    sscanf(dueDate.c_str(), "%d-%d-%d", &dueY, &dueM, &dueD);
+
+    int retY, retM, retD;
+    sscanf(returnDate.c_str(), "%d-%d-%d", &retY, &retM, &retD);
+
+    // Build tm structs
+    tm due = {};
+    due.tm_year = dueY - 1900;
+    due.tm_mon = dueM - 1;
+    due.tm_mday = dueD;
+
+    tm ret = {};
+    ret.tm_year = retY - 1900;
+    ret.tm_mon = retM - 1;
+    ret.tm_mday = retD;
+
+    // Convert to time_t
+    time_t dueTime = mktime(&due);
+    time_t returnTime = mktime(&ret);
+
+    // Calculate days late
+    double seconds = difftime(returnTime, dueTime);
+    int daysLate = static_cast<int>(seconds / (60 * 60 * 24));
+
+    fineAmount = (daysLate > 0) ? daysLate * finePerDay : 0.0f;
+}
+
+
+    // Display transaction details
+    void display() const {
+        cout << "Transaction ID: " << transactionId << ", Book ID: " << bookId
+             << ", User ID: " << userId << ", Issue Date: " << issueDate
+             << ", Due Date: " << dueDate << ", Return Date: "
+             << (returnDate.empty() ? "Not Returned" : returnDate)
+             << ", Fine: Rs. " << fineAmount << endl;
+    }
+
+    // Getters
+    int getTransactionId() const { return transactionId; }
+    int getBookId() const { return bookId; }
+    int getUserId() const { return userId; }
+    string getIssueDate() const { return issueDate; }
+    string getDueDate() const { return dueDate; }
+    string getReturnDate() const { return returnDate; }
+    float getFineAmount() const { return fineAmount; }
+
+ 
+};
 int main() {
 
 }
