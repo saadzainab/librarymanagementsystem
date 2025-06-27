@@ -6,6 +6,9 @@
 #include <sstream>
 #include <ctime>
 #include <cstdio>
+#include <vector>
+#include <fstream>
+ 
 using namespace std;
 
 
@@ -124,14 +127,56 @@ public:
         return bookId == other.bookId;
     }
 
-    // Optional: Return book info as string (for file I/O or debug)
-    string toString() const {
-        return to_string(bookId) + "," + title + "," +
-               to_string(authorId) + "," + to_string(genreId) + "," +
-               to_string(yearPublished) + "," + to_string(price) + "," +
-               to_string(noOfCopies);
-    }
+    // Save book to file (CSV format)
+void saveToFile(ofstream& out) const {
+    out << bookId << ',' << title << ',' << authorId << ',' << genreId << ','
+        << yearPublished << ',' << price << ',' << noOfCopies << '\n';
+}
+
+// Load book from a CSV line
+static Book fromString(const string& line) {
+    Book b;
+    stringstream ss(line);
+    string temp;
+
+    getline(ss, temp, ',');
+    b.bookId = stoi(temp);
+    getline(ss, b.title, ',');
+    getline(ss, temp, ',');
+    b.authorId = stoi(temp);
+    getline(ss, temp, ',');
+    b.genreId = stoi(temp);
+    getline(ss, temp, ',');
+    b.yearPublished = stoi(temp);
+    getline(ss, temp, ',');
+    b.price = stof(temp);
+    getline(ss, temp, ',');
+    b.noOfCopies = stoi(temp);
+
+    return b;
+}
+
 };
+
+vector<Book> loadAllBooks() {
+    vector<Book> books;
+    ifstream file("books.txt");
+    string line;
+    while (getline(file, line)) {
+        if (!line.empty()) {
+            books.push_back(Book::fromString(line));
+        }
+    }
+    return books;
+}
+
+void saveAllBooks(const vector<Book>& books) {
+    ofstream file("books.txt");
+    for (const Book& b : books) {
+        b.saveToFile(file);
+    }
+}
+
 
 class user{
     private:
