@@ -142,6 +142,7 @@ static Book fromString(const string& line) {
     getline(ss, temp, ',');
     b.bookId = stoi(temp);
     getline(ss, b.title, ',');
+    //b.title = stoi(temp);
     getline(ss, temp, ',');
     b.authorId = stoi(temp);
     getline(ss, temp, ',');
@@ -202,8 +203,45 @@ class user{
         cout << "Enter Password: ";
         getline(cin, password);
     }
+    void saveToFile(ofstream& out) const {
+    out << userId << "," << name << "," << email << "," << password << "\n";
+}
+
+static user fromString(const string& line) {
+    user u;
+    stringstream ss(line);
+    string temp;
+
+    getline(ss, temp, ',');
+    u.userId = stoi(temp);
+    getline(ss, u.name, ',');
+    getline(ss, u.email, ',');
+    getline(ss, u.password, ',');
+
+    return u;
+}
 
 };
+vector<user> loadAllUsers() {
+    vector<user> users;
+    ifstream file("users.txt");
+    string line;
+    while (getline(file, line)) {
+        if (!line.empty()) {
+            users.push_back(user::fromString(line));
+        }
+    }
+    return users;
+}
+
+void saveAllUsers(const vector<user>& users) {
+    ofstream file("users.txt");
+    for (const user& u : users) {
+        u.saveToFile(file);
+    }
+}
+
+
 
 class Transaction {
 private:
@@ -291,8 +329,78 @@ public:
     string getReturnDate() const { return returnDate; }
     float getFineAmount() const { return fineAmount; }
 
- 
+   void saveToFile(ofstream& out) const {
+    out << transactionId << "," << bookId << "," << userId << ","
+        << issueDate << "," << dueDate << "," << returnDate << "," << fineAmount << "\n";
+}
+
+static Transaction fromString(const string& line) {
+    Transaction t;
+    stringstream ss(line);
+    string temp;
+
+    getline(ss, temp, ',');
+    t.transactionId = stoi(temp);
+    getline(ss, temp, ',');
+    t.bookId = stoi(temp);
+    getline(ss, temp, ',');
+    t.userId = stoi(temp);
+    getline(ss, t.issueDate, ',');
+    getline(ss, t.dueDate, ',');
+    getline(ss, t.returnDate, ',');
+    getline(ss, temp, ',');
+    t.fineAmount = stof(temp);
+
+    return t;
+}
+
 };
+vector<Transaction> loadAllTransactions() {
+    vector<Transaction> transactions;
+    ifstream file("transactions.txt");
+    string line;
+    while (getline(file, line)) {
+        if (!line.empty()) {
+            transactions.push_back(Transaction::fromString(line));
+        }
+    }
+    return transactions;
+}
+
+void saveAllTransactions(const vector<Transaction>& transactions) {
+    ofstream file("transactions.txt");
+    for (const Transaction& t : transactions) {
+        t.saveToFile(file);
+    }
+}
+
 int main() {
 
+    vector<Book> books = loadAllBooks(); // Load books from file
+    vector<user> users = loadAllUsers();
+    vector<Transaction> transactions = loadAllTransactions();
+    cout << "--------------------------- All Books ---------------------------\n";
+    for (const Book& b : books) {
+        b.display();
+    }
+
+    /*cout << "\nAdding a new book...\n";
+    Book newBook;
+    newBook.inputDetails();
+    books.push_back(newBook);
+
+    saveAllBooks(books); // Save back to file
+    cout << "\nUpdated book list saved.\n";*/
+    
+
+    cout << "--------------------------- Users ---------------------------\n";
+    for (const user& u : users) {
+        u.display();
+    }
+
+    cout << "\n--------------------------- Transactions ---------------------------\n";
+    for (const Transaction& t : transactions) {
+        t.display();
+    }
+    return 0;
 }
