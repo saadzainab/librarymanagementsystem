@@ -61,11 +61,15 @@ public:
 
     
     void display() const {
+        HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE); // get handle here
+    SetConsoleTextAttribute(h, 11); // Bright Cyan for headings
         cout << "Book ID: " << bookId << ", Title: " << title
              << ", Author ID: " << authorId << ", Genre ID: " << genreId
              << ", Year Published: " << yearPublished
              << ", Price: $" << price
-             << ", Copies Available: " << noOfCopies << endl;
+             << ", Copies Available: " << noOfCopies << endl<<endl;
+
+             SetConsoleTextAttribute(h, 7); // Reset
     }
 
     
@@ -190,7 +194,10 @@ class user{
     user(int id, const string& n, const string& e, const string& p)
         : userId(id), name(n), email(e), password(p) {}
     void display() const {
-        cout << "User ID: " << userId << ", Name: " << name << ", Email: " << email << endl;
+        HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
+    SetConsoleTextAttribute(h, 9); // Aqua
+        cout << "User ID: " << userId << ", Name: " << name << ", Email: " << email << endl<<endl;
+        SetConsoleTextAttribute(h, 7); // Reset
     }
     void inputDetails() {
         cout << "Enter User ID: ";
@@ -313,11 +320,14 @@ public:
 
     // Display transaction details
     void display() const {
+        HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
+    SetConsoleTextAttribute(h, 3); // Aqua
         cout << "Transaction ID: " << transactionId << ", Book ID: " << bookId
              << ", User ID: " << userId << ", Issue Date: " << issueDate
              << ", Due Date: " << dueDate << ", Return Date: "
              << (returnDate.empty() ? "Not Returned" : returnDate)
-             << ", Fine: Rs. " << fineAmount << endl;
+             << ", Fine: Rs. " << fineAmount << endl<<endl;
+            SetConsoleTextAttribute(h, 7); // Reset
     }
 
     // Getters
@@ -375,32 +385,138 @@ void saveAllTransactions(const vector<Transaction>& transactions) {
 }
 
 int main() {
-
-    vector<Book> books = loadAllBooks(); // Load books from file
+    vector<Book> books = loadAllBooks();
     vector<user> users = loadAllUsers();
     vector<Transaction> transactions = loadAllTransactions();
-    cout << "--------------------------- All Books ---------------------------\n";
-    for (const Book& b : books) {
-        b.display();
-    }
 
-    /*cout << "\nAdding a new book...\n";
-    Book newBook;
-    newBook.inputDetails();
-    books.push_back(newBook);
+    int choice;
 
-    saveAllBooks(books); // Save back to file
-    cout << "\nUpdated book list saved.\n";*/
-    
+    do {
+        cout << "\n========== Library Menu ==========\n";
+        cout << "1. View All Books\n";
+        cout << "2. Add New Book\n";
+        cout << "3. View All Users\n";
+        cout << "4. Add New User\n";
+        cout << "5. View All Transactions\n";
+        cout << "6. Issue Book\n";
+        cout << "7. Return Book\n";
+        cout << "0. Exit\n";
+        cout << "Enter your choice: ";
+        cin >> choice;
 
-    cout << "--------------------------- Users ---------------------------\n";
-    for (const user& u : users) {
-        u.display();
-    }
+        switch (choice) {
+            case 1: {
+                cout << "\n--- Book List ---\n";
+                for (const Book& b : books) {
+                    b.display();
+                }
+                break;
+            }
+            case 2: {
+                Book newBook;
+                newBook.inputDetails();
+                books.push_back(newBook);
+                saveAllBooks(books);
+                cout << "Book added and saved.\n";
+                break;
+            }
+            case 3: {
+                cout << "\n--- User List ---\n";
+                for (const user& u : users) {
+                    u.display();
+                }
+                break;
+            }
+            case 4: {
+                user newUser;
+                newUser.inputDetails();
+                users.push_back(newUser);
+                saveAllUsers(users);
+                cout << "User added and saved.\n";
+                break;
+            }
+            case 5: {
+                cout << "\n--- Transactions ---\n";
+                for (const Transaction& t : transactions) {
+                    t.display();
+                }
+                break;
+            }
+            case 6: { // Issue book
+                int tid, bid, uid;
+                string issueDate, dueDate;
+                cout << "Enter Transaction ID: ";
+                cin >> tid;
+                cout << "Enter Book ID to issue: ";
+                cin >> bid;
+                cout << "Enter User ID: ";
+                cin >> uid;
+                cout << "Enter Issue Date (yyyy-mm-dd): ";
+                cin >> issueDate;
+                cout << "Enter Due Date (yyyy-mm-dd): ";
+                cin >> dueDate;
 
-    cout << "\n--------------------------- Transactions ---------------------------\n";
-    for (const Transaction& t : transactions) {
-        t.display();
-    }
+                bool found = false;
+                for (Book& b : books) {
+                    if (b.getBookId() == bid) {
+                        if (b.isAvailable()) {
+                            b.issueCopy();
+                            transactions.emplace_back(tid, bid, uid, issueDate, dueDate);
+                            saveAllBooks(books);
+                            saveAllTransactions(transactions);
+                            cout << "Book issued successfully.\n";
+                        } else {
+                            cout << "No copies available.\n";
+                        }
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) cout << "Book not found.\n";
+                break;
+            }
+            case 7: { // Return book
+                int tid;
+                string returnDate;
+                cout << "Enter Transaction ID to return: ";
+                cin >> tid;
+                cout << "Enter Return Date (yyyy-mm-dd): ";
+                cin >> returnDate;
+
+                bool found = false;
+                for (Transaction& t : transactions) {
+                    if (t.getTransactionId() == tid && t.getReturnDate().empty()) {
+                        t.returnBook(returnDate);
+
+                        // Increment the book's copy count
+                        for (Book& b : books) {
+                            if (b.getBookId() == t.getBookId()) {
+                                b.returnCopy();
+                                break;
+                            }
+                        }
+
+                        saveAllBooks(books);
+                        saveAllTransactions(transactions);
+                        cout << "Book returned. Fine: Rs. " << t.getFineAmount() << "\n";
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) cout << "Transaction not found or already returned.\n";
+                break;
+            }
+            case 0: {
+                cout << "Exiting...\n";
+                break;
+            }
+            default:
+                cout << "Invalid choice. Try again.\n";
+        }
+
+        system("pause");
+        system("cls");
+    } while (choice != 0);
+
     return 0;
 }

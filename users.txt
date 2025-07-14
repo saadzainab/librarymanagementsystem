@@ -1,3 +1,10 @@
 1,Zainab Saad,zainab@example.com,password123
 2,Ali Khan,ali.khan@gmail.com,secure456
 3,Amna Raza,amna_15@yahoo.com,amna@789
+4,Hassan Shah,hassan.shah@gmail.com,h@ssan001
+5,Maria Iqbal,maria.iqbal@outlook.com,mar12345
+6,Usman Tariq,usman_t@hotmail.com,usman@pass
+7,Fatima Noor,fatima.noor@gmail.com,f@tima789
+8,Ahmed Siddiqui,ahmed.sid@yahoo.com,ahmed321
+9,Sana Javed,sana.j@live.com,sana123!
+10,Omar Raza,omar.f@gmail.com,farooq_007
